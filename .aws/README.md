@@ -1,8 +1,6 @@
 # AWS Cloudformation
 
-Launches the Harvester for the News API.
-
-**[26/07/15] Important: Once the stack has been created. You must manually bind the Kinesis stream as an event source. As of now the binding of Lambda<->Kinesis is not currently supported.**
+Lambda function that adds entries to a DynamoDB Scheduler Table
 
 ### Dependencies
 

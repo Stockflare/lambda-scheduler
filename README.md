@@ -23,7 +23,7 @@ This example defines a task that is scheduled to execute a simple rake task ever
     "Task": {
       "Type": "Custom::Scheduler",
       "Properties": {
-        "ServiceToken": { "Fn::GetAtt" : ["Scheduler", "Arn"] },
+        "ServiceToken": { "Fn::GetAtt" : ["Scheduler", "TokenArn"] },
         "Table" : { "Fn::GetAtt" : ["Scheduler", "Table"] },
         "Region" : { "Ref" : "AWS::Region" },
         "Definitions" : [
@@ -48,3 +48,5 @@ This example defines a task that is scheduled to execute a simple rake task ever
   }
 }
 ```
+
+_Note: The reference here to a resource named `Scheduler` is a StackOutputs resource, enabling access to the outputs from the Cloudformation inside this repository._
