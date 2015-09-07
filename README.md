@@ -11,6 +11,37 @@ This lambda function is designed to work in conjunction with the Scheduler Syste
 * [Schedulr Gem](#) for integrating the task scheduler into your application.
 * [Schedulr Service](#) for listening and triggering tasks that are ready to be scheduled.
 
+## Reference
+
+Use the `Custom::Scheduler` task inside your Cloudformation, to define recurring arbitrary tasks, to be executed by a listener ([Schedulr Gem](#)) integrated into your application using an SQS queue. In-order for the tasks to be triggered, you must be using the [Schedulr Service](#).
+
+```
+{
+  "Type" : "Custom::Scheduler",
+  "Properties" : {
+    "ServiceToken" : * <String> [The Scheduler Lambda Function ARN],
+    "Table" : * <String> [Name of the DynamoDB Table to add this recurring task to],
+    "Region" : * <String> [AWS Region Name],
+    "Definitions" : [
+      {
+        "Id" : * <String> [Unique identifier for this task],
+        "Type" : * <String> [Only SQS value supported],
+        "Name" : * <String> [SQS Queue name],
+        "StartTime" : <Timestamp> [The time in UTC for this schedule to start],
+        "EndTime" : <TimeStamp> [The time in UTC for this schedule to end]
+        "Recurrence" : * <String> [Cron style time format],
+        "Message" : * {
+          "$" : * <Array> [ <String> [Bash command to execute], ... ]
+        }
+      },
+      ...
+    ]
+  }
+}
+```
+
+**Note:** All asteriks (*) denote a required field.
+
 ## Example Usage
 
 This example defines a task that is scheduled to execute a simple rake task every 6 hours.
