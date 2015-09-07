@@ -49,4 +49,10 @@ This example defines a task that is scheduled to execute a simple rake task ever
 }
 ```
 
-_Note: The reference here to a resource named `Scheduler` is a [StackOutputs resource](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/walkthrough-custom-resources-lambda-cross-stack-ref.html), enabling access to the outputs from the Cloudformation inside this repository._
+_Note: The reference here to a resource named `Scheduler` is a [StackOutputs resource](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/walkthrough-custom-resources-lambda-cross-stack-ref.html), enabling access to the outputs from the Cloudformation inside this template._
+
+When the lambda function is called, it will create the following entry inside the provided DynamoDB table:
+
+| id                  | type  | name                      | recurrence    | message                       | start_time                 | end_time |
+|---------------------|-------|---------------------------|---------------|-------------------------------|----------------------------|----------|
+| `SomeTaskHarvester` | `SQS` | `9498234-some-queue-name` | `0 */6 * * *` | `{"$":["rake do:some:task"]}` | `2015-09-07T12:57:48.489Z` | `null`   |
