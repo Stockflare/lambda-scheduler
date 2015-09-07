@@ -70,17 +70,25 @@ exports.handler = function(event, context) {
 };
 
 var key = function(task) {
-  return { Key: { id: { S: task.Id } } }
+  return {
+    Key: {
+      id: {
+        S: task.Id
+      }
+    }
+  };
 }
 
 var item = function(task) {
-  return { Item: {
-    id: { S: task.Id },
-    start_time: { S: task.StartTime },
-    end_time: { S: task.EndTime },
-    recurrence: { S: task.Recurrence },
-    type: { S: task.Type },
-    name: { S: task.Name },
-    message: { S: JSON.stringify(task.Message) }
-  } };
+  return {
+    Item: {
+      id: { S: task.Id },
+      start_time: { S: task.StartTime },
+      end_time: { S: task.EndTime },
+      recurrence: { S: task.Recurrence },
+      type: { S: task.Type },
+      name: { S: task.Name },
+      message: { S: JSON.stringify(task.Message) }
+    }
+  };
 };
