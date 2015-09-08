@@ -6,14 +6,9 @@
 
 This lambda function is designed to work in conjunction with the Scheduler System. This function integrates with AWS Cloudformation, enabling the definition of recurring tasks within your templates. See below for some example usage.
 
-## Optional Requirements
-
-* [Schedulr Gem](#) for integrating the task scheduler into your application.
-* [Schedulr Service](#) for listening and triggering tasks that are ready to be scheduled.
-
 ## Reference
 
-Use the `Custom::Scheduler` task inside your Cloudformation, to define recurring arbitrary tasks, to be executed by a listener ([Schedulr Gem](#)) integrated into your application using an SQS queue. In-order for the tasks to be triggered, you must be using the [Schedulr Service](#).
+Use the `Custom::Scheduler` task inside your Cloudformation, to define recurring arbitrary tasks, to be executed on a specific ECS Cluster using a provided Task Definition and an optional override. In-order for the tasks to be triggered, you must be using the [Schedulr Service](#).
 
 ```
 {
@@ -25,14 +20,25 @@ Use the `Custom::Scheduler` task inside your Cloudformation, to define recurring
     "Definitions" : [
       {
         "Id" : * <String> [Unique identifier for this task],
-        "Type" : * <String> [Only SQS value supported],
-        "Name" : * <String> [SQS Queue name],
+        "Recurrence" : * <String> [Cron style time format],
+        "Cluster" : * <String> [Reference to ECS Cluster name],
+        "TaskDefinition" : * <String> [Reference to the ECS Task Definition and Revision],
         "StartTime" : <Timestamp> [The time in UTC for this schedule to start],
         "EndTime" : <TimeStamp> [The time in UTC for this schedule to end]
-        "Recurrence" : * <String> [Cron style time format],
-        "Message" : * {
-          "$" : * <Array> [ <String> [Bash command to execute], ... ]
-        }
+        "Overrides" : [
+          {
+            "Name": <String> [Override name of the container instance],
+            "Command": <Array<String>> [Override command to be executed],
+            "Environment": [
+              {
+                "Name": <String> [Environment name override],
+                "Value": <String> [Environment value override]
+              },
+              ...
+            ],
+          },
+          ...
+        ]
       },
       ...
     ]
@@ -51,6 +57,17 @@ This example defines a task that is scheduled to execute a simple rake task ever
   "Resources" : {
     ...
 
+    "ECSCluster": {
+      "Type": "AWS::ECS::Cluster"
+    },
+
+    "ECSTaskDefinition" : {
+      "Type" : "AWS::ECS::TaskDefinition",
+      "Properties" : {
+        ...
+      }
+    }
+
     "Task": {
       "Type": "Custom::Scheduler",
       "Properties": {
@@ -59,21 +76,18 @@ This example defines a task that is scheduled to execute a simple rake task ever
         "Region" : { "Ref" : "AWS::Region" },
         "Definitions" : [
           {
-            "Id" : "SomeTaskHarvester",
-            "Type" : "SQS",
-            "Name" : { "Fn::GetAtt" : ["TaskQueue", "QueueName"] },
+            "Id" : "SomeRakeTask",
             "Recurrence" : "0 */6 * * *",
-            "Message" : {
-              "$" : ["rake do:some:task"]
-            }
+            "Cluster" : { "Ref" : "ECSCluster" },
+            "TaskDefinition" : { "Ref" : "ECSTaskDefinition" },
+            "Overrides" : [{
+              "Name": "some_rake_task",
+              "Command": ["rake", "some:task"]
+            }]
           }
         ]
       }
-    },
-
-    "TaskQueue" : {
-      "Type" : "AWS::SQS::Queue"
-    },
+    }
 
     ...
   }
@@ -82,8 +96,16 @@ This example defines a task that is scheduled to execute a simple rake task ever
 
 _Note: The reference here to a resource named `Scheduler` is a [StackOutputs resource](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/walkthrough-custom-resources-lambda-cross-stack-ref.html), enabling access to the outputs from the Cloudformation inside this template._
 
+---
+
 When the lambda function is called, it will create the following entry inside the provided DynamoDB table:
 
-| id                  | type  | name                      | recurrence    | message                       | start_time                 | end_time |
-|---------------------|-------|---------------------------|---------------|-------------------------------|----------------------------|----------|
-| `SomeTaskHarvester` | `SQS` | `9498234-some-queue-name` | `0 */6 * * *` | `{"$":["rake do:some:task"]}` | `2015-09-07T12:57:48.489Z` | `null`   |
+| Key             | Value                                                          |
+|-----------------|----------------------------------------------------------------|
+| id              | `"SomeRakeTask"`                                               |
+| cluster         | `"some-cluster-name"`                                          |
+| task_definition | `"arn:...ecs-task/1"`                                          |
+| recurrence      | `"0 */6 * * *"`                                                |
+| overrides       | `"[{"Name":"some_rake_task","Command":["rake","some:task"]}]"` |
+| start_time      | `"2015-09-07T12:57:48.489Z"`                                   |
+| end_time        | `null`                                                         |
