@@ -12,36 +12,31 @@ Use the `Custom::Scheduler` task inside your Cloudformation, to define recurring
 
 ```
 {
-  "Type" : "Custom::Scheduler",
+  "Type" : "AWS::CloudFormation::CustomResource",
   "Properties" : {
     "ServiceToken" : * <String> [The Scheduler Lambda Function ARN],
     "Table" : * <String> [Name of the DynamoDB Table to add this recurring task to],
-    "Region" : * <String> [AWS Region Name],
-    "Definitions" : [
-      {
-        "Id" : * <String> [Unique identifier for this task],
-        "Recurrence" : * <String> [Cron style time format],
-        "Cluster" : * <String> [Reference to ECS Cluster name],
-        "TaskDefinition" : * <String> [Reference to the ECS Task Definition and Revision],
-        "StartTime" : <Timestamp> [The time in UTC for this schedule to start],
-        "EndTime" : <TimeStamp> [The time in UTC for this schedule to end]
-        "Overrides" : [
-          {
-            "Name": <String> [Override name of the container instance],
-            "Command": <Array<String>> [Override command to be executed],
-            "Environment": [
-              {
-                "Name": <String> [Environment name override],
-                "Value": <String> [Environment value override]
-              },
-              ...
-            ],
-          },
-          ...
-        ]
-      },
-      ...
-    ]
+    "Task" : {
+      "Recurrence" : * <String> [Cron style time format],
+      "Cluster" : * <String> [Reference to ECS Cluster name],
+      "TaskDefinition" : * <String> [Reference to the ECS Task Definition and Revision],
+      "StartTime" : <Timestamp> [The time in UTC for this schedule to start],
+      "EndTime" : <TimeStamp> [The time in UTC for this schedule to end]
+      "Overrides" : [
+        {
+          "Name": <String> [Override name of the container instance],
+          "Command": <Array<String>> [Override command to be executed],
+          "Environment": [
+            {
+              "Name": <String> [Environment name override],
+              "Value": <String> [Environment value override]
+            },
+            ...
+          ],
+        },
+        ...
+      ]
+    }
   }
 }
 ```
@@ -73,19 +68,15 @@ This example defines a task that is scheduled to execute a simple rake task ever
       "Properties": {
         "ServiceToken": { "Fn::GetAtt" : ["Scheduler", "TokenArn"] },
         "Table" : { "Fn::GetAtt" : ["Scheduler", "Table"] },
-        "Region" : { "Ref" : "AWS::Region" },
-        "Definitions" : [
-          {
-            "Id" : "SomeRakeTask",
-            "Recurrence" : "0 */6 * * *",
-            "Cluster" : { "Ref" : "ECSCluster" },
-            "TaskDefinition" : { "Ref" : "ECSTaskDefinition" },
-            "Overrides" : [{
-              "Name": "some_rake_task",
-              "Command": ["rake", "some:task"]
-            }]
-          }
-        ]
+        "Task" : {
+          "Recurrence" : "0 */6 * * *",
+          "Cluster" : { "Ref" : "ECSCluster" },
+          "TaskDefinition" : { "Ref" : "ECSTaskDefinition" },
+          "Overrides" : [{
+            "Name": "some_rake_task",
+            "Command": ["rake", "some:task"]
+          }]
+        }
       }
     }
 
@@ -102,7 +93,7 @@ When the lambda function is called, it will create the following entry inside th
 
 | Key             | Value                                                          |
 |-----------------|----------------------------------------------------------------|
-| id              | `"SomeRakeTask"`                                               |
+| id              | `"d92b4866-1fb3-4606-8c95-7fe4610e4662"`                       |
 | cluster         | `"some-cluster-name"`                                          |
 | task_definition | `"arn:...ecs-task/1"`                                          |
 | recurrence      | `"0 */6 * * *"`                                                |

@@ -1,9 +1,16 @@
 console.log('Loading function');
 
+// dependencies
+var aws = require('aws-sdk');
+var response = {
+  send: function() { return console.log(arguments); },
+  SUCCESS: "SUCCESS",
+  FAILED: 'FAILED'
+};
+
+try { response = require('cfn-response'); } catch(e) {}
+
 exports.handler = function(event, context) {
-  // dependencies
-  var aws = require('aws-sdk');
-  var response = require('cfn-response');
 
   // set variables
   var region = event.ResourceProperties.Region;
@@ -70,13 +77,7 @@ exports.handler = function(event, context) {
 };
 
 var key = function(task) {
-  return {
-    Key: {
-      id: {
-        S: task.Id
-      }
-    }
-  };
+  return { Key: { id: { S: task.Id } } };
 }
 
 var item = function(task) {
@@ -86,9 +87,9 @@ var item = function(task) {
       start_time: { S: task.StartTime },
       end_time: { S: task.EndTime },
       recurrence: { S: task.Recurrence },
-      type: { S: task.Type },
-      name: { S: task.Name },
-      message: { S: JSON.stringify(task.Message) }
+      cluster: { S: task.Cluster },
+      task_definition: { S: task.TaskDefinition },
+      overrides: { S: JSON.stringify(task.Overrides) }
     }
   };
 };
