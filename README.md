@@ -2,7 +2,7 @@
 
 | Staging | Production |
 |:-:|:-:|
-| --- | --- |
+|[![Build Status](http://drone.stocktio.com/api/badge/github.com/Stockflare/lambda-scheduler/status.svg?branch=master)](http://drone.stocktio.com/github.com/Stockflare/lambda-scheduler)| --- |
 
 This lambda function is designed to work in conjunction with the Scheduler System. This function integrates with AWS Cloudformation, enabling the definition of recurring tasks within your templates. See below for some example usage.
 
