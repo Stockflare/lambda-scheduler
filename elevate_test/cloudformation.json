@@ -1,0 +1,211 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Lambda function that adds entries to a DynamoDB Scheduler Table",
+
+  "Parameters" : {
+
+    "FunctionPackage" : {
+      "Type" : "String",
+      "Default" : "lambda-scheduler"
+    },
+
+    "FunctionDescription" : {
+      "Type" : "String",
+      "Default" : "Cloudformation Custom Resource for Task Scheduling"
+    },
+
+    "FunctionVersion" : {
+      "Type" : "String",
+      "Default" : "0-0-2_latest"
+    },
+
+    "StackOutputsArn" : {
+      "Type" : "String"
+    },
+
+    "ServiceImage" : {
+      "Type" : "String",
+      "Description": "The docker image to use for this service",
+      "Default" : "quay.io/elevate_invest/lambda-scheduler"
+    },
+
+    "ServiceVersion" : {
+      "Type" : "String",
+      "Description": "The version tag to use for the docker container",
+      "Default" : "switch-to-node-scheduler-model"
+    }
+
+  },
+
+  "Resources" : {
+
+    "Environment": {
+      "Type": "Custom::StackOutputs",
+      "Properties": {
+        "ServiceToken": { "Ref" : "StackOutputsArn" },
+        "StackName" : "variables"
+      }
+    },
+
+    "ECSCluster": {
+      "Type": "Custom::StackOutputs",
+      "Properties": {
+        "ServiceToken": { "Ref" : "StackOutputsArn" },
+        "StackName" : "ecs-cluster"
+      }
+    },
+
+    "ECSSchedulerInstancePolicy" : {
+       "Type" : "AWS::IAM::Policy",
+       "Properties" : {
+          "PolicyName" : "ECSSchedulerInstancePolicy",
+          "PolicyDocument" : {
+            "Version" : "2012-10-17",
+            "Statement": [
+              {
+               "Effect": "Allow",
+               "Action": [
+                 "logs:CreateLogGroup",
+                 "logs:CreateLogStream",
+                 "logs:PutLogEvents"
+               ],
+               "Resource": [ "arn:aws:logs:*:*:*" ]
+              },
+              {
+                "Effect": "Allow",
+                "Action": [ "dynamodb:Put*", "dynamodb:Delete*", "dynamodb:Scan", "dynamodb:UpdateItem" ],
+                "Resource": [ "*" ]
+              }
+            ]
+          },
+          "Roles" : [
+            { "Fn::GetAtt": [ "ECSCluster", "InstanceRole" ] },
+            { "Ref": "LambdaFunctionRole" }
+          ]
+       }
+    },
+
+    "LambdaFunctionRole" : {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [ "lambda.amazonaws.com" ]
+              },
+              "Action": [ "sts:AssumeRole" ]
+            }
+          ]
+        },
+        "Path": "/"
+      }
+    },
+
+    "LambdaFunctionToken": {
+      "DependsOn" : "ECSSchedulerInstancePolicy",
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "Description" : { "Ref" : "FunctionDescription" },
+        "Runtime" : "nodejs",
+        "MemorySize" : "128",
+        "Timeout" : "60",
+        "Handler" : "index.handler",
+        "Role" : {"Fn::GetAtt" : ["LambdaFunctionRole", "Arn"] },
+        "Code" : {
+          "S3Bucket" : { "Fn::GetAtt" : ["Environment", "LambdaStorageBucketName"] },
+          "S3Key" : { "Fn::Join" : ["", [
+            "lambda/", { "Ref" : "FunctionPackage" }, "_", { "Ref" : "FunctionVersion" }, ".zip"
+          ]] }
+        }
+      }
+    },
+
+    "SchedulerDynamoDBTable" : {
+      "Type" : "AWS::DynamoDB::Table",
+      "Properties" : {
+        "AttributeDefinitions" : [
+          {
+            "AttributeName" : "id",
+            "AttributeType" : "S"
+          }
+        ],
+        "KeySchema" : [
+          {
+            "AttributeName" : "id",
+            "KeyType" : "HASH"
+          }
+        ],
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : "5",
+          "WriteCapacityUnits" : "5"
+        }
+      }
+    },
+
+    "SchedulerServiceTaskDefinition" : {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties" : {
+        "ContainerDefinitions" : [
+          {
+            "Name" : "clockwork-process",
+            "Essential" : "true",
+            "Image" : { "Fn::Join" : ["", [
+              { "Ref" : "ServiceImage" }, ":", { "Ref" : "ServiceVersion" }]]
+            },
+            "Command" : ["node worker/process.js"],
+            "Memory" : "256",
+            "Cpu" : "64",
+            "Environment" : [
+              {
+                "Name" : "AWS_REGION",
+                "Value" : { "Ref" : "AWS::Region"}
+              },
+              {
+                "Name" : "DYNAMO_TABLE",
+                "Value" : { "Ref" : "SchedulerDynamoDBTable"}
+              }
+            ]
+          }
+        ]
+      }
+    },
+
+    "SchedulerService": {
+      "Type": "AWS::ECS::Service",
+      "DependsOn" : "ECSSchedulerInstancePolicy",
+      "Properties" : {
+        "Cluster": { "Fn::GetAtt": [ "ECSCluster", "ECSCluster" ] },
+        "DesiredCount": "1",
+        "TaskDefinition" : { "Ref":"SchedulerServiceTaskDefinition" }
+      }
+    }
+
+  },
+
+  "Outputs" : {
+
+    "SchedulerDynamoDBTable" : {
+      "Description" : "DynamoDB Table storing scheduled tasks",
+      "Value" : { "Ref" : "SchedulerDynamoDBTable" }
+    },
+
+    "Token" : {
+      "Description" : "Retrieve Harvester Lambda Function Name",
+      "Value" : { "Ref" : "LambdaFunctionToken" }
+    },
+
+    "TokenArn" : {
+      "Description" : "Retrieve Etcd Token Lambda Function ARN",
+      "Value" : { "Fn::Join": [ "", [
+        "arn:aws:lambda:", { "Ref": "AWS::Region" },
+        ":", { "Ref": "AWS::AccountId" }, ":function:",
+        { "Ref" : "LambdaFunctionToken"}
+      ]]}
+    }
+
+  }
+}

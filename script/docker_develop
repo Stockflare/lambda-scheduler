@@ -1,0 +1,26 @@
+#!/bin/bash
+if [ "$#" == 0 ]
+then
+docker rm lambda-scheduler
+  docker run --name=lambda-scheduler --volume=/lambda-scheduler:/lambda-scheduler --tty=false --interactive=false --detach=true lambda-scheduler
+
+elif [ "$1" == 'console' ]
+then
+  docker run --volume=/lambda-scheduler:/lambda-scheduler --tty=true --interactive=true --detach=false --rm=true lambda-scheduler "bundle exec rails c"
+
+elif [ "$1" == 'rspec' ]
+then
+  docker run --volume=/lambda-scheduler:/lambda-scheduler --tty=true --interactive=true --detach=false --rm=true lambda-scheduler "bundle exec rspec $2 $3 $4 $5 $6 $7 $8 $9"
+
+elif [ "$1" == 'bash' ]
+then
+  docker run --volume=/lambda-scheduler:/lambda-scheduler --tty=true --interactive=true --detach=false --rm=true lambda-scheduler "/bin/bash"
+
+elif [ "$1" == 'zeus' ]
+then
+  docker run --volume=/lambda-scheduler:/lambda-scheduler --tty=true --interactive=true --detach=false --rm=true lambda-scheduler "zeus start"
+
+else
+  echo "running freeform"
+  docker run --name=lambda-scheduler-run --volume=/lambda-scheduler:/lambda-scheduler --tty=true --interactive=true --detach=false --rm=true lambda-scheduler "$1 $2 $3 $4 $5 $6 $7 $8 $9"
+fi
