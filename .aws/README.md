@@ -1,6 +1,6 @@
 # AWS Cloudformation
 
-This template creates a Lambda function with sufficient IAM permissions so that its adds entries to a DynamoDB Scheduler Table. The Cloudformation itself provides a number of outputs, to make it possible to build & schedule recurring tasks within other Cloudformations.
+This template creates a Lambda function with sufficient IAM permissions so that it can manage entries in a DynamoDB Scheduler Table. The Cloudformation itself provides a number of outputs, to make it possible to build & schedule recurring tasks within other Cloudformations.
 
 ### Dependencies
 
