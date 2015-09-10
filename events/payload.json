@@ -1,19 +1,21 @@
 {
-  "Records": [
-    {
-      "eventID": "shardId-000000000000:49545115243490985018280067714973144582180062593244200961",
-      "eventVersion": "1.0",
-      "kinesis": {
-        "partitionKey": "partitionKey-3",
-        "data": "eyANCiAgImlkIjogIlNCMTAzNzc2MDE4MjAzNDQ3MDQ2NDM3MDQ1ODEwNTE4NTQwNjY5Mjk4ODAiLCANCiAgInNvdXJjZV9pZCI6IDIwLCANCiAgInRpdGxlIjogIlN5cmlhbiBXZWFwb25zIFB1cmdlIENvbWVzIFVwIFNob3J0IiwgDQogICJ1cmwiOiAiaHR0cDovL3d3dy53c2ouY29tL2FydGljbGVzL21pc3Npb24tdG8tcHVyZ2Utc3lyaWEtb2YtY2hlbWljYWwtd2VhcG9ucy1jb21lcy11cC1zaG9ydC0xNDM3Njg3NzQ0P21vZD1yc3NfbWlkZGxlX2Vhc3RfbmV3cyIsIA0KICAiZXhjZXJwdCI6ICJMYXN0IHllYXLigJlzIGludGVybmF0aW9uYWwgaW5zcGVjdGlvbiBlZmZvcnQgcmlkIFN5cmlhIG9mIG1hbnkgY2hlbWljYWwgd2VhcG9ucywgYnV0IFUuUy4gaW50ZWxsaWdlbmNlIGFnZW5jaWVzIG5vdyBiZWxpZXZlIHRoZSBBc3NhZCByZWdpbWUgZGlkbuKAmXQgZ2l2ZSB1cCAuLi4iLCANCiAgImNyZWF0ZWRfYXQiOiAiMjAxNS0wNy0yNFQwMDozMTo1NyswMDowMCIsDQogICJ0YWJsZSI6ICJhcGktbmV3cy1wb3N0LVBvc3REeW5hbW9EQlRhYmxlLTFTMERENEMxNEw1OUYiDQp9",
-        "kinesisSchemaVersion": "1.0",
-        "sequenceNumber": "49545115243490985018280067714973144582180062593244200961"
-      },
-      "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
-      "eventName": "aws:kinesis:record",
-      "eventSourceARN": "arn:aws:kinesis:EXAMPLE",
-      "eventSource": "aws:kinesis",
-      "awsRegion": "us-east-1"
+  "StackId": "arn:aws:cloudformation:us-east-1:SCHEDULER/my-scheduler-stack/8846a155-76f7-47f9-9a7c-f09847350871",
+  "ResponseURL": "http://pre-signed-S3-url-for-response",
+  "ResourceProperties": {
+    "StackName": "my-scheduler-stack",
+    "Table" : { "Fn::GetAtt" : ["Scheduler", "Table"] },
+    "Task" : {
+      "Recurrence" : "0 */6 * * *",
+      "Cluster" : "coreo-ECSCl-G5B45417NK9N",
+      "TaskDefinition" : "arn:aws:ecs:us-east-1:SCHEDULER:task-definition/my-schedu-1A9LAL2OI58DT:1",
+      "Overrides" : [{
+        "Name": "some_rake_task",
+        "Command": ["rake", "some:task"]
+      }]
     }
-  ]
+  },
+  "RequestType": "Create",
+  "ResourceType": "Custom::Scheduler",
+  "RequestId": "a165463b-860e-4de7-b9a1-debbe4a694d0",
+  "LogicalResourceId": "MySchedulerTask"
 }
