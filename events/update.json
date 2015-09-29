@@ -1,0 +1,32 @@
+{
+  "RequestType": "Update",
+  "RequestId": "123456",
+  "ResponseURL": "pre-signed-url-for-create-response",
+  "ResourceType": "Custom::Scheduler",
+  "LogicalResourceId": "123456",
+  "PhysicalResourceId": "eb72ed47-6b06-49d4-9cae-b099cf2905cd",
+  "StackId": "arn:aws:cloudformation:us-east-1:namespace:stack/stack-name/guid",
+  "ResourceProperties": {
+    "Table" : "TestCustomSchedulerTable",
+    "Region" : "eu-west-1",
+    "Task" : {
+      "Cluster" : "coreo-ECSCl-G5B45417NK9N",
+      "TaskDefinition" : "TaskDefinition",
+      "Recurrence" : "*/3 * * * *",
+      "StartTime" : "2015-09-05T13:15:30Z",
+      "EndTime" : "2016-09-05T13:15:30Z",
+      "Overrides" : [
+        {
+          "Name" : "rails-server",
+          "Command" : ["bundle exec rake foobarbaz"],
+          "Environment" : [
+            {
+              "Name" : "FOOFOO",
+              "Value" : "BARBAR"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
