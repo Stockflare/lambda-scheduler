@@ -44,26 +44,26 @@ RUN /bin/bash -l -c "npm install -g gulp"
 RUN /bin/bash -l -c "npm install -g grunt-cli"
 
 # Add the application to the container (cwd)
-WORKDIR /lambda-scheduler
-RUN sudo chown -R nuser:nuser /lambda-scheduler/
+WORKDIR /stockflare
+RUN sudo chown -R nuser:nuser /stockflare/
 
 # Create Gemset
-RUN /bin/bash -l -c "rvm gemset create lambda-scheduler"
-RUN /bin/bash -l -c "rvm use 2.2.3@lambda-scheduler --default"
+RUN /bin/bash -l -c "rvm gemset create stockflare"
+RUN /bin/bash -l -c "rvm use 2.2.3@stockflare --default"
 
 RUN sudo apt-get autoremove -y
 
 # Copy across the rest of the code
-ADD . /lambda-scheduler
+ADD . /stockflare
 RUN sudo chown -R nuser:nuser .
 
 RUN /bin/bash -l -c "npm install"
 
-WORKDIR /lambda-scheduler/worker
+WORKDIR /stockflare/worker
 RUN /bin/bash -l -c "npm install"
-WORKDIR /lambda-scheduler
+WORKDIR /stockflare
 
-VOLUME ["/lambda-scheduler"]
+VOLUME ["/stockflare"]
 
 
 # Setup the entrypoint

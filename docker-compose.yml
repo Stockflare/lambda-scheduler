@@ -1,0 +1,6 @@
+scheduler:
+  build: .
+  volumes:
+    - .:/stockflare
+  # env_file:
+  #   - ./.env
